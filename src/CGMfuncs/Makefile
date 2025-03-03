@@ -1,8 +1,8 @@
 -include ../make_setting
 
-INC_PATH := -I$(MPI_DIR)/include
-LIB_PATH := -L$(MPI_DIR)/lib
-LIBS     := -lmpi -lmpi_cxx -lmpi_f90 -lmpi_f77
+INC_PATH := 
+LIB_PATH := 
+LIBS     := 
 
 TARGET = libcgmfuncs.a
 

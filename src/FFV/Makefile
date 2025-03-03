@@ -19,7 +19,7 @@ FFV_INC_PATH    += -I$(POLYLIB)/include
 FFV_INC_PATH    += -I$(CUTLIB)/include -DCUTINFO_NORMAL_DOUBLE
 FFV_INC_PATH    += -I$(BCM_DIR)/include
 FFV_INC_PATH    += -I$(HDMLIB)/include
-FFV_INC_PATH    += -I$(MPI_DIR)/include
+#FFV_INC_PATH    += -I$(MPI_DIR)/include
 FFV_INC_PATH    += -I$(CGM_FUNCS)
 
 FFV_LIB_PATH    := -L$(PMLIB)/lib
@@ -28,13 +28,14 @@ FFV_LIB_PATH    += -L$(POLYLIB)/lib
 FFV_LIB_PATH    += -L$(CUTLIB)/lib
 FFV_LIB_PATH    += -L$(BCM_DIR)/lib
 FFV_LIB_PATH    += -L$(HDMLIB)/lib
-FFV_LIB_PATH    += -L$(MPI_DIR)/lib
+#FFV_LIB_PATH    += -L$(MPI_DIR)/lib
 FFV_LIB_PATH    += -L$(CGM_FUNCS)
 
 FFV_LIBS        := -lHDM -lbcm -lCUT -lMPIPOLY -lPM -lMPITP -lcgmfuncs -lmpi -lmpi_cxx -lmpi_f90 -lmpi_f77
 FFV_LIBS        := -lHDM -lBCM -lCUT -lPOLYmpi -lPM -lTPmpi -lcgmfuncs -lmpi -lmpi_cxx -lmpi_f90 -lmpi_f77
 FFV_LIBS        := -lHDM -lBCM -lCUT -lPOLYmpi -lPM -lTPmpi -lcgmfuncs -lmpi -lmpi_cxx -lmpi_mpifh
 FFV_LIBS        := -lHDM -lBCM -lCUT -lPOLYmpi -lPM -lTPmpi -lcgmfuncs 
+FFV_LIBS        := -lHDMmpi -lBCMmpi -lCUT -lPOLYmpi -lPMmpi -lTPmpi -lcgmfuncs 
 
 PROGRAM = ffv
 
@@ -67,11 +68,11 @@ PROGRAM: $(OBJS) $(BCM_UTILS_OBJS) $(BCM_FILEIO_OBJS)
 	$(CXX) \
 	$(LDFLAGS) \
 	-o $(PROGRAM) $(OBJS) $(BCM_UTILS_OBJS) $(BCM_FILEIO_OBJS) \
-	$(FFV_LIB_PATH) $(FFV_LIBS) $(LIBS) 
+	$(FFV_LIB_PATH) -L$(MPI_DIR)/lib $(FFV_LIBS) $(LIBS) 
 	mv $(PROGRAM) ../../bin/
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) $(FFV_INC_PATH) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) $(FFV_INC_PATH) -I$(MPI_DIR)/include -o $@ -c $<
 
 .SUFFIXES: .f90
 .f90.o:

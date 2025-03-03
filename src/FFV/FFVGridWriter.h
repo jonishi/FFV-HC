@@ -23,13 +23,14 @@ namespace BCMT_NAMESPACE {
 
 	class GridWriter {
 		BlockManager& blockManager;
-		const MPI::Intracomm& comm;
+		const MPI_Comm& comm;
 
 		public:
 		GridWriter()
 			: blockManager(BlockManager::getInstance()),
 			comm(blockManager.getCommunicator()) {
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				MPI_Comm_rank(comm, &myrank);
 
 				for (int id = 0; id < blockManager.getNumBlock(); ++id) {
 					BlockBase* block = blockManager.getBlock(id);
@@ -49,7 +50,11 @@ namespace BCMT_NAMESPACE {
 				Partition* partition,
 				Vec3r rootOrigin,
 				double rootLength) {
-			int myrank = comm.Get_rank();
+			int myrank = -1;
+			int numProc = -1;
+			MPI_Comm_rank(comm, &myrank);
+			MPI_Comm_size(comm, &numProc);
+
 			if (myrank == 0) {
 				ofstream ofs;
 				ofs.open("data-grid.obj", ios::out);
@@ -57,7 +62,7 @@ namespace BCMT_NAMESPACE {
 				ofs << "g grid" << std::endl;
 
 				std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-				for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+				for (int iRank = 0; iRank < numProc; iRank++) {
 					for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 						Node* node = leafNodeArray[id];
 						Vec3r origin = tree->getOrigin(node) * rootLength;
@@ -85,7 +90,7 @@ namespace BCMT_NAMESPACE {
 					}
 				}
 				int m = 0;
-				for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+				for (int iRank = 0; iRank < numProc; iRank++) {
 					for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 						Node* node = leafNodeArray[id];
 						Vec3r origin = tree->getOrigin(node) * rootLength;

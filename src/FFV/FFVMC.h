@@ -29,7 +29,8 @@ public:
 	FFVMC()
 		: blockManager(BlockManager::getInstance()),
 			comm(blockManager.getCommunicator()) {
-		int myrank = comm.Get_rank();
+		int myrank = -1;
+		MPI_Comm_rank(comm, &myrank);
 		for(int id=0; id<blockManager.getNumBlock(); ++id) {
 			BlockBase* block = blockManager.getBlock(id);
 		}
@@ -49,7 +50,7 @@ public:
 
 private:
 	BlockManager& blockManager;
-	const MPI::Intracomm& comm;
+	const MPI_Comm& comm;
 
 public:
 template <typename T>
@@ -79,7 +80,11 @@ template <typename T>
 		mkdir(ossFileNameTime.str().c_str(), 0755);
 
 		const Vec3i& size = blockManager.getSize();
-		int myrank = comm.Get_rank();
+
+		int myrank = -1;
+		MPI_Comm_rank(comm, &myrank);
+		int numProc = -1;
+		MPI_Comm_size(comm, &numProc);
 
 		for (int id = 0; id < blockManager.getNumBlock(); ++id) {
 			BlockBase* block = blockManager.getBlock(id);
@@ -148,7 +153,7 @@ template <typename T>
 		ofs << "</PPoints>" << std::endl;
 
 		std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-		for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+		for (int iRank = 0; iRank < numProc; iRank++) {
 			for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 				Node* node = leafNodeArray[id];
 				Vec3r origin = tree->getOrigin(node) * rootLength;

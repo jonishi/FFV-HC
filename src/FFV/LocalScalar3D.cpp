@@ -73,7 +73,12 @@ void LocalScalar3D<real>::CalcStats(BlockManager& blockManager) {
 template <>
 void LocalScalar3D<real>::Dump(BlockManager& blockManager, const int step, const char* label) {
 	ImposeBoundaryCondition(blockManager);
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 	ostringstream ossFileNameTime;
 	ossFileNameTime << "./BIN/";
@@ -99,7 +104,7 @@ void LocalScalar3D<real>::Dump(BlockManager& blockManager, const int step, const
 		ossFileName.width(5);
 		ossFileName.setf(ios::fixed);
 		ossFileName.fill('0');
-		ossFileName << comm.Get_rank();
+		ossFileName << myRank;
 		ossFileName << "-";
 		ossFileName.width(5);
 		ossFileName.setf(ios::fixed);
@@ -133,7 +138,12 @@ void LocalScalar3D<real>::Dump(BlockManager& blockManager, const int step, const
 
 template <>
 void LocalScalar3D<real>::Load(BlockManager& blockManager, const int step, const char* label) {
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 #ifdef _BLOCK_IS_LARGE_
 #else
@@ -155,7 +165,7 @@ void LocalScalar3D<real>::Load(BlockManager& blockManager, const int step, const
 		ossFileName.width(5);
 		ossFileName.setf(ios::fixed);
 		ossFileName.fill('0');
-		ossFileName << comm.Get_rank();
+		ossFileName << myRank;
 		ossFileName << "-";
 		ossFileName.width(5);
 		ossFileName.setf(ios::fixed);
@@ -215,7 +225,12 @@ void LocalScalar3D<real>::Load(BlockManager& blockManager, const int step, const
 template <>
 void LocalScalar3D<real>::Dump2(BlockManager& blockManager, const int step, const char* label) {
 	ImposeBoundaryCondition(blockManager);
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 	std::string path = g_pFFVConfig->RestartOutputPath;
 	std::string prefix = g_pFFVConfig->RestartPrefix;
@@ -233,7 +248,7 @@ void LocalScalar3D<real>::Dump2(BlockManager& blockManager, const int step, cons
 	ossFileName.width(5);
 	ossFileName.setf(ios::fixed);
 	ossFileName.fill('0');
-	ossFileName << comm.Get_rank();
+	ossFileName << myRank;
 	ossFileName << "-";
 	ossFileName.width(10);
 	ossFileName.setf(ios::fixed);
@@ -274,7 +289,12 @@ void LocalScalar3D<real>::Dump2(BlockManager& blockManager, const int step, cons
 
 template <>
 void LocalScalar3D<real>::Load2(BlockManager& blockManager, const int step, const char* label) {
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 	std::string path = g_pFFVConfig->RestartInputPath;
 	std::string prefix = g_pFFVConfig->RestartPrefix;
@@ -288,7 +308,7 @@ void LocalScalar3D<real>::Load2(BlockManager& blockManager, const int step, cons
 	ossFileName.width(5);
 	ossFileName.setf(ios::fixed);
 	ossFileName.fill('0');
-	ossFileName << comm.Get_rank();
+	ossFileName << myRank;
 	ossFileName << "-";
 	ossFileName.width(10);
 	ossFileName.setf(ios::fixed);
@@ -356,7 +376,12 @@ void LocalScalar3D<real>::Load2(BlockManager& blockManager, const int step, cons
 template <>
 void LocalScalar3D<real>::Dump3(BlockManager& blockManager, const int step, const char* label, Partition* partition, int myrank) {
 	ImposeBoundaryCondition(blockManager);
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 	ostringstream ossFileNameTime;
 	ossFileNameTime << "./BIN/";
@@ -424,7 +449,12 @@ void LocalScalar3D<real>::Dump3(BlockManager& blockManager, const int step, cons
 
 template <>
 void LocalScalar3D<real>::Load3(BlockManager& blockManager, const int step, const char* label, Partition* partition, int myrank) {
-	MPI::Intracomm comm = blockManager.getCommunicator();
+	MPI_Comm comm = blockManager.getCommunicator();
+
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
 
 #ifdef _BLOCK_IS_LARGE_
 #else

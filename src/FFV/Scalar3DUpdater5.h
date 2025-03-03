@@ -55,7 +55,7 @@ public:
   ///  @param[in] comm MPIコミュニケータ(ディフォルトMPI::COMM_WORLD)
   ///
   Scalar3DUpdater5(const NeighborInfo *neighborInfo,
-                   const MPI::Comm &comm = MPI::COMM_WORLD)
+                   const MPI_Comm comm = MPI_COMM_WORLD)
       : VCUpdater(neighborInfo, comm)
   {
     clearCommBufferPointer();

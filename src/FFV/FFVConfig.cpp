@@ -710,8 +710,10 @@ void FFVConfig::GetOuterBoundary(std::string FaceId, OBC& obcP, OBC& obcUX, OBC&
 }
 
 void FFVConfig::Check() {
-	MPI::Comm& comm = MPI::COMM_WORLD;
-	if( comm.Get_rank() != 0 ) {
+	MPI_Comm comm = MPI_COMM_WORLD;
+	int myRank = -1;
+	MPI_Comm_rank(comm, &myRank);
+	if( myRank != 0 ) {
 		return;
 	}
 

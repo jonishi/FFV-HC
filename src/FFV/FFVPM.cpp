@@ -74,7 +74,7 @@ void PM_Start(unsigned key, int level, int id, bool bBarrier) {
 	if( bBarrier == true && !strcasecmp(g_pFFVConfig->OperationMode.c_str(), "benchmark") ) {
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
-	g_pPM->start(key);
+	g_pPM->start(label[key]);
 
 #ifdef __FAPP
 #ifdef __FUJITSU
@@ -90,6 +90,6 @@ void PM_Stop(unsigned key, int level, int id, double flopPerTask, unsigned itera
 #endif
 #endif
 
-	g_pPM->stop(key, flopPerTask, iterationCount);
+	g_pPM->stop(label[key], flopPerTask, iterationCount);
 }
 

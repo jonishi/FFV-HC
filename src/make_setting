@@ -12,17 +12,18 @@
 #############################################################################
 
 MPI_DIR     := /usr/local
-MPI_DIR     := 
 MPI_DIR     := /opt/openmpi
 MPI_DIR     := /usr/lib/openmpi
+MPI_DIR     := /usr/lib/x86_64-linux-gnu/openmpi
+MPI_DIR     := 
 
 FFV_HOME    := ../../lib
 FFV_HOME    := $(HOME)/FFV
+FFV_HOME    := /home/z30517/Work/Libs/FFV.miyabi
 
 TPLIB       := $(FFV_HOME)/TextParser
 POLYLIB     := $(FFV_HOME)/Polylib
 CUTLIB      := $(FFV_HOME)/Cutlib
-CUTLIB      := $(FFV_HOME)/Catlib
 PMLIB       := $(FFV_HOME)/PMlib
 BCM_DIR     := $(FFV_HOME)/BCMTools
 HDMLIB      := $(FFV_HOME)/HDMlib
@@ -36,6 +37,7 @@ FFV_COMP    := pgi
 FFV_COMP    := fx
 FFV_COMP    := intel
 FFV_COMP    := gnu
+FFV_COMP    := nvidia
 
 FFV_REAL    := float
 FFV_REAL    := double
@@ -102,7 +104,27 @@ ifeq ($(FFV_COMP),pgi)
   F90FLAGS    := $(OPTFLAGS) -Mpreprocess
   LDFLAGS     := -mp -fastsse 
   LIBS        := -lpgf90 -lpgf90_rpm1 -lpgf902 -lpgf90rtl -lpgftnrtl -lpgmp -lnspgc -lpgc -lrt 
-  ifeq ($(REAL), double)
+  ifeq ($(FFV_REAL), double)
+    CXXFLAGS  += -D_REAL_IS_DOUBLE_ 
+    F90FLAGS  += -D_REAL_IS_DOUBLE_ -r8
+  endif
+endif
+
+ifeq ($(FFV_COMP),nvidia)
+  CXX         := nvcc
+  F90         := nvfortran
+  CXX         := /opt/nvidia/hpc_sdk/Linux_x86_64/2025/comm_libs/mpi/bin/mpic++
+  F90         := /opt/nvidia/hpc_sdk/Linux_x86_64/2025/comm_libs/mpi/bin/mpif90
+  CXX         := /work/opt/local/aarch64/cores/nvidia/24.9/Linux_aarch64/24.9/comm_libs/hpcx/bin/mpic++
+  F90         := /work/opt/local/aarch64/cores/nvidia/24.9/Linux_aarch64/24.9/comm_libs/hpcx/bin/mpif90
+  AR          := ar
+  RANLIB      := ranlib
+  OPTFLAGS    := -O3 -mp -fast
+  CXXFLAGS    := $(OPTFLAGS) -Xcompiler -fopenmp
+  F90FLAGS    := $(OPTFLAGS) -fopenmp -Mfree -Mpreprocess -fPIE
+  LDFLAGS     := -O3 -Xcompiler -fopenmp
+  LIBS        := -lm -lgomp -lmpi -lmpi_mpifh -fortranlibs
+  ifeq ($(FFV_REAL), double)
     CXXFLAGS  += -D_REAL_IS_DOUBLE_ 
     F90FLAGS  += -D_REAL_IS_DOUBLE_ -r8
   endif

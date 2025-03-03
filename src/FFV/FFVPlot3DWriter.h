@@ -33,13 +33,14 @@ namespace BCMT_NAMESPACE {
 
 	class Plot3DWriter {
 		BlockManager& blockManager;
-		const MPI::Intracomm& comm;
+		const MPI_Comm& comm;
 
 		public:
 		Plot3DWriter()
 			: blockManager(BlockManager::getInstance()),
 			comm(blockManager.getCommunicator()) {
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				MPI_Comm_rank(comm, &myrank);
 				for (int id = 0; id < blockManager.getNumBlock(); ++id) {
 					BlockBase* block = blockManager.getBlock(id);
 				}
@@ -69,7 +70,8 @@ namespace BCMT_NAMESPACE {
 			mkdir(ossFileNameTime.str().c_str(), 0755);
 
 			const Vec3i& size = blockManager.getSize();
-			int myrank = comm.Get_rank();
+			int myrank = -1;
+			MPI_Comm_rank(comm, &myrank);
 
 			ostringstream ossFileName;
 			ossFileName << "./PLOT3D/";
@@ -155,7 +157,8 @@ namespace BCMT_NAMESPACE {
 			mkdir(ossFileNameTime.str().c_str(), 0755);
 
 			const Vec3i& size = blockManager.getSize();
-			int myrank = comm.Get_rank();
+			int myrank = -1;
+			MPI_Comm_rank(comm, &myrank);
 
 			ostringstream ossFileName;
 			ossFileName << "./PLOT3D/";
@@ -253,7 +256,8 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+		  		int myrank = -1;
+				MPI_Comm_rank(comm, &myrank);
 
 				ostringstream ossFileName;
 				ossFileName << "./PLOT3D/";
@@ -360,7 +364,8 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				MPI_Comm_rank(comm, &myrank);
 
 				ostringstream ossFileName;
 				ossFileName << "./PLOT3D/";
@@ -478,7 +483,8 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				MPI_Comm_rank(comm, &myrank);
 
 				ostringstream ossFileName;
 				ossFileName << "./PLOT3D/";

@@ -33,7 +33,7 @@ namespace BCMT_NAMESPACE {
 
 	class VtkWriter {
 		BlockManager& blockManager;
-		const MPI::Intracomm& comm;
+		const MPI_Comm comm;
 
 		public:
 		VtkWriter()
@@ -797,7 +797,10 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				int numProc = -1;
+				MPI_Comm_rank(comm, &myrank);
+				MPI_Comm_size(comm, &numProc);
 
 				float* dataP  = new float[(size.x) * (size.y) * (size.z)];
 
@@ -851,7 +854,7 @@ namespace BCMT_NAMESPACE {
 						ofs << dx;
 						ofs << "\">";
 						ofs << endl;
-						for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+						for (int iRank = 0; iRank < numProc; iRank++) {
 							for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 								Node* node = leafNodeArray[id];
 								Vec3r origin = tree->getOrigin(node) * rootLength;
@@ -963,7 +966,10 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				int numProc = -1;
+				MPI_Comm_rank(comm, &myrank);
+				MPI_Comm_size(comm, &numProc);
 
 				float* dataP  = new float[(size.x) * (size.y) * (size.z)];
 
@@ -1029,7 +1035,7 @@ namespace BCMT_NAMESPACE {
 					ofsPVD << endl;
 
 					std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-					for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+					for (int iRank = 0; iRank < numProc; iRank++) {
 						for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 							Node* node = leafNodeArray[id];
 							Vec3r origin = tree->getOrigin(node) * rootLength;
@@ -1150,7 +1156,10 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				int numProc = -1;
+				MPI_Comm_rank(comm, &myrank);
+				MPI_Comm_size(comm, &numProc);
 
 				float* dataP  = new float[(size.x) * (size.y) * (size.z)];
 				float* dataUX = new float[(size.x) * (size.y) * (size.z)];
@@ -1228,7 +1237,7 @@ namespace BCMT_NAMESPACE {
 					ofsPVD << endl;
 
 					std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-					for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+					for (int iRank = 0; iRank < numProc; iRank++) {
 						for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 							Node* node = leafNodeArray[id];
 							Vec3r origin = tree->getOrigin(node) * rootLength;
@@ -1350,7 +1359,10 @@ namespace BCMT_NAMESPACE {
 				mkdir(ossFileNameTime.str().c_str(), 0755);
 
 				const Vec3i& size = blockManager.getSize();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				int numProc = -1;
+				MPI_Comm_rank(comm, &myrank);
+				MPI_Comm_size(comm, &numProc);
 
 				float* dataP  = new float[(size.x) * (size.y) * (size.z)];
 				float* dataUX = new float[(size.x) * (size.y) * (size.z)];
@@ -1432,7 +1444,7 @@ namespace BCMT_NAMESPACE {
 					ofsPVD << endl;
 
 					std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-					for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+					for (int iRank = 0; iRank < numProc; iRank++) {
 						for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 							Node* node = leafNodeArray[id];
 							Vec3r origin = tree->getOrigin(node) * rootLength;
@@ -1556,7 +1568,10 @@ namespace BCMT_NAMESPACE {
 
 				const Vec3i& size = blockManager.getSize();
 				const Vec3r& origin = blockManager.getBlock(0)->getOrigin();
-				int myrank = comm.Get_rank();
+				int myrank = -1;
+				int numProc = -1;
+				MPI_Comm_rank(comm, &myrank);
+				MPI_Comm_size(comm, &numProc);
 
 				float* dataP  = new float[(size.x) * (size.y) * (size.z)];
 				float* dataUX = new float[(size.x) * (size.y) * (size.z)];
@@ -1634,7 +1649,7 @@ namespace BCMT_NAMESPACE {
 						ofs << "\">";
 						ofs << endl;
 						int lid = 0;
-						for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+						for (int iRank = 0; iRank < numProc; iRank++) {
 							for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 								Node* node = leafNodeArray[id];
 								Vec3r origin = tree->getOrigin(node) * rootLength;

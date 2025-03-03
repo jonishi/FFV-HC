@@ -39,7 +39,7 @@ Solver::Solver()
 	}
 
 Solver::~Solver() {
-	MPI::Finalize();
+	MPI_Finalize();
 }
 
 int Solver::Init(int argc, char** argv){
@@ -90,16 +90,20 @@ int Solver::Init(int argc, char** argv){
 }
 
 void Solver::InitMPI(int argc, char** argv) {
-	MPI::Init(argc, argv);
+	MPI_Init(&argc, &argv);
 
-	MPI::Comm& comm = MPI::COMM_WORLD;
-	this->myrank = comm.Get_rank();
+	MPI_Comm comm = MPI_COMM_WORLD;
+	int rank = 0;
+	MPI_Comm_rank(comm, &rank);
+	this->myrank = rank;
+	int size = 0;
+	MPI_Comm_size(comm, &size);
 
 	srand( this->myrank + 1 );
 
 	if( argc != 2 ) {
 		PrintLog(0, "usage: %s configfile", argv[0]);
-		comm.Abort(EX_USAGE);
+		MPI_Abort(comm, EX_USAGE);
 	}
 
 	PrintLog(1, FFV_SOLVERNAME);
@@ -107,7 +111,7 @@ void Solver::InitMPI(int argc, char** argv) {
 	PrintLog(2, "%-20s : %s", "Revision"          , FFV_REVISION);
 	PrintLog(2, "%-20s : %s", "Build date"        , BUILD_DATE);
 	PrintLog(2, "%-20s : %s", "Configuration file", argv[1]);
-	PrintLog(2, "%-20s : %d", "MPI processes"     , comm.Get_size());
+	PrintLog(2, "%-20s : %d", "MPI processes"     , size);
 #ifdef _OPENMP
 	PrintLog(2, "%-20s : %d", "OpenMP threads"    , omp_get_max_threads());
 #endif
@@ -132,6 +136,7 @@ void Solver::InitPMlib() {
 	g_pPM = new pm_lib::PerfMonitor;
 	g_pPM->initialize(tm_END);
 	g_pPM->setRankInfo(this->myrank);
+/*
 	g_pPM->setProperties(tm_Init_LoadSTL,      "LoadSTL",      pm_lib::PerfMonitor::COMM, true);
 	g_pPM->setProperties(tm_Init_DivideDomain, "DivideDomain", pm_lib::PerfMonitor::CALC, true);
 	g_pPM->setProperties(tm_Init_CreateTree,   "CreateTree",   pm_lib::PerfMonitor::CALC, true);
@@ -192,12 +197,15 @@ void Solver::InitPMlib() {
 	g_pPM->setProperties(tm_PrintForce, "PrintForce",pm_lib::PerfMonitor::CALC, true);
 	g_pPM->setProperties(tm_PrintHeatFlux, "PrintHeatFlux",pm_lib::PerfMonitor::CALC, true);
 	g_pPM->setProperties(tm_PrintData,  "PrintData", pm_lib::PerfMonitor::CALC, true);
+*/
 	int nThreads = 1;
 #ifdef _OPENMP
 	nThreads = omp_get_max_threads();
 #endif
-	MPI::Comm& comm = MPI::COMM_WORLD;
-	g_pPM->setParallelMode("Hybrid", nThreads, comm.Get_size());
+	MPI_Comm comm = MPI_COMM_WORLD;
+	int size = 0;
+	MPI_Comm_size(comm, &size);
+	g_pPM->setParallelMode("Hybrid", nThreads, size);
 
 	PrintLog(2, "Completed");
 }
@@ -317,9 +325,12 @@ void Solver::InitTree() {
 	PM_Stop(tm_Init_CreateTree);
 
 	int numLeafNode = tree->getNumLeafNode();
-	MPI::Comm& comm = MPI::COMM_WORLD;
-	partition = new Partition(comm.Get_size(), numLeafNode);
-	for(int n=0; n<comm.Get_size(); n++) {
+
+	MPI_Comm comm = MPI_COMM_WORLD;
+	int size = 0;
+	MPI_Comm_size(comm, &size);
+	partition = new Partition(size, numLeafNode);
+	for(int n=0; n<size; n++) {
 		if( n==0 ) {
 			PrintLog(2, "%-20s : #%05d [%04d:%04d] (%04d)",
 									"Partitions", n,
@@ -416,7 +427,12 @@ void Solver::InitGridParams() {
 void Solver::InitSTL() {
 	PrintLog(1, "Distributing polygon(s)");
 
-	MPI::Comm& comm = MPI::COMM_WORLD;
+	MPI_Comm comm = MPI_COMM_WORLD;
+	int myRank = -1;
+	int numProc = -1;
+	MPI_Comm_rank(comm, &myRank);
+	MPI_Comm_size(comm, &numProc);
+
 	PM_Start(tm_Init_DistributeSTL, 0, 0, true);
 	if( myrank == 0 ) {
 		Vec3r rootOrigin = g_pFFVConfig->RootBlockOrigin;
@@ -425,7 +441,7 @@ void Solver::InitSTL() {
 		BlockBoundingBox bbb(tree, rootOrigin, rootLength, size, margin);
 
 		std::vector<Node*>& leafNodeArray = tree->getLeafNodeArray();
-		for (int iRank = 0; iRank < comm.Get_size(); iRank++) {
+		for (int iRank = 0; iRank < numProc; iRank++) {
 			BoundingBox box;
 			for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++) {
 				Node* node = leafNodeArray[id];

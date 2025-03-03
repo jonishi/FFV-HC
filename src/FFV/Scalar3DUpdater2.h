@@ -45,7 +45,7 @@ namespace BCMT_NAMESPACE {
 				///  @param[in] comm MPIコミュニケータ(ディフォルトMPI::COMM_WORLD)
 				///
 				Scalar3DUpdater2(const NeighborInfo* neighborInfo,
-						const MPI::Comm& comm = MPI::COMM_WORLD)
+						const MPI_Comm comm = MPI_COMM_WORLD)
 					: VCUpdater(neighborInfo, comm) {
 						clearCommBufferPointer();
 						clearNeighbor();
