@@ -119,10 +119,10 @@ ifeq ($(FFV_COMP),nvidia)
   F90         := /work/opt/local/aarch64/cores/nvidia/24.9/Linux_aarch64/24.9/comm_libs/hpcx/bin/mpif90
   AR          := ar
   RANLIB      := ranlib
-  OPTFLAGS    := -O3 -mp -fast
-  CXXFLAGS    := $(OPTFLAGS) -Xcompiler -fopenmp
-  F90FLAGS    := $(OPTFLAGS) -fopenmp -Mfree -Mpreprocess -fPIE
-  LDFLAGS     := -O3 -Xcompiler -fopenmp
+  OPTFLAGS    := -fast -mp
+  CXXFLAGS    := $(OPTFLAGS)
+  F90FLAGS    := $(OPTFLAGS) -Mfree -Mpreprocess
+  LDFLAGS     := -O3
   LIBS        := -lm -lgomp -lmpi -lmpi_mpifh -fortranlibs
   ifeq ($(FFV_REAL), double)
     CXXFLAGS  += -D_REAL_IS_DOUBLE_ 
