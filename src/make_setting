@@ -17,9 +17,8 @@ MPI_DIR     := /usr/lib/openmpi
 MPI_DIR     := /usr/lib/x86_64-linux-gnu/openmpi
 MPI_DIR     := 
 
-FFV_HOME    := ../../lib
 FFV_HOME    := $(HOME)/FFV
-FFV_HOME    := /home/z30517/Work/Libs/FFV.miyabi
+FFV_HOME    := /home/z30517/Work/Devel/FFV-HC-miyabi/FFVLibs.miyabi
 
 TPLIB       := $(FFV_HOME)/TextParser
 POLYLIB     := $(FFV_HOME)/Polylib
