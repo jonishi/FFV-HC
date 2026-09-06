@@ -35,10 +35,12 @@
 #undef GLOBAL_VALUE_DEFINE
 
 Solver::Solver()
-	: blockManager(BlockManager::getInstance()) {
+	: blockManager(BlockManager::getInstance()), pl_movingstl_initial(0), pl_movingstl(0) {
 	}
 
 Solver::~Solver() {
+	delete pl_movingstl;
+	delete pl_movingstl_initial;
 	MPI::Finalize();
 }
 
@@ -54,6 +56,7 @@ int Solver::Init(int argc, char** argv){
 	InitGridParams();
 	InitSTL();
 	InitSTL2();
+	InitSTL_movingstl();
 
 	InitCut();
 	InitFaceFlag();
@@ -149,6 +152,7 @@ void Solver::InitPMlib() {
 	g_pPM->setProperties(tm_Init_GeometricalProperties, "GeometricalProperties",  pm_lib::PerfMonitor::CALC, true);
 	g_pPM->setProperties(tm_Init_InitVars,     "InitVars",     pm_lib::PerfMonitor::CALC, true);
 	g_pPM->setProperties(tm_Update,     "Update",    pm_lib::PerfMonitor::CALC, false);
+	g_pPM->setProperties(tm_UpdateSTL, "UpdateSTL", pm_lib::PerfMonitor::CALC, false);
 	g_pPM->setProperties(tm_UpdateT,    "UpdateT",   pm_lib::PerfMonitor::CALC, false);
 	g_pPM->setProperties(tm_UpdateUX,   "UpdateUX",  pm_lib::PerfMonitor::CALC, false);
 	g_pPM->setProperties(tm_UpdateUY,   "UpdateUY",  pm_lib::PerfMonitor::CALC, false);
@@ -2499,6 +2503,7 @@ void Solver::PrintTime(int step) {
 	ossMessage.setf(std::ios::scientific, std::ios::floatfield);
 	ossMessage.precision(16);
 	ossMessage << times[0];
+	ossMessage << " UpdateSTL=" << times[7] << " s";
 	PrintLog(0, ossMessage.str().c_str());
 
 	std::string filename = "data-times.txt";
@@ -2524,6 +2529,8 @@ void Solver::PrintTime(int step) {
 	ofs << this->times[4] << " ";
 	ofs << this->times[5] << " ";
 	ofs << this->times[6] << " ";
+	ofs << this->times[7] << " ";
+	for (int i = 8; i < 12; ++i) ofs << this->times[i] << " ";
 	ofs << std::endl;
 	ofs.close();
 }
@@ -3339,6 +3346,9 @@ int Solver::Update(int step) {
 	PM_Start(tm_Update, 0, 0, true);
 	double t0 = GetTime();
 
+	UpdateSTL(step);
+
+/*
 	if( g_pFFVConfig->TimeControlAccelerationAcceleratingTimeI > 0 && step <= g_pFFVConfig->TimeControlAccelerationAcceleratingTimeI ) {
 		real vb = g_pFFVConfig->OuterBCUX[X_M].value*(real)step/(real)g_pFFVConfig->TimeControlAccelerationAcceleratingTimeI;
 		plsUX0->ResetBoundaryConditionValue(blockManager, 0, vb);
@@ -3395,16 +3405,12 @@ int Solver::Update(int step) {
 	UpdateU(step);
 	PM_Stop(tm_UpdateU);
 	double t6 = GetTime();
+*/
 
 	PM_Stop(tm_Update);
 
-	this->times[0] = t6 - t0;
-	this->times[1] = t1 - t0;
-	this->times[2] = t2 - t1;
-	this->times[3] = t3 - t2;
-	this->times[4] = t4 - t3;
-	this->times[5] = t5 - t4;
-	this->times[6] = t6 - t5;
+	this->times[0] = GetTime() - t0;
+	for (int i = 1; i < 7; ++i) this->times[i] = 0.0;
 
 	return EX_SUCCESS;
 }

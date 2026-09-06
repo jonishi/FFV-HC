@@ -84,6 +84,9 @@ class FFVConfig {
 
 		//GeometryModel
 		std::string		PolylibConfig;
+		Vec3d STLRotationCenter;
+		double STLRotationRadius;
+		double STLRotationAngularVelocity;
 
 		//Iteration
 		std::string		IterationSolverP;

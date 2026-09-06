@@ -62,6 +62,7 @@ enum timing_key {
 	tm_PrintForce,
 	tm_PrintHeatFlux,
 	tm_PrintData,
+	tm_UpdateSTL,
 	tm_END,
 };
 

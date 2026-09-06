@@ -128,6 +128,14 @@ void FFVConfig::Load(std::string filename) {
 
 	//GeometryModel
 	PolylibConfig						= Read<std::string>		("/GeometryModel/PolylibFile");
+	const bool nestedRotation = tp->chkLabel("/GeometryModel/Rotation/Center") ||
+		tp->chkLabel("/GeometryModel/Rotation/Radius") ||
+		tp->chkLabel("/GeometryModel/Rotation/AngularVelocity");
+	const std::string rotationPath = nestedRotation ?
+		"/GeometryModel/Rotation" : "/Rotation";
+	STLRotationCenter = Read<Vec3d>(rotationPath + "/Center", Vec3d(0.0, 0.0, 0.0));
+	STLRotationRadius = Read<double>(rotationPath + "/Radius", 0.0);
+	STLRotationAngularVelocity = Read<double>(rotationPath + "/AngularVelocity", 0.0);
 
 	//Iteration
 	std::string lsp					= Read<std::string>		("/Iteration/Pressure");
