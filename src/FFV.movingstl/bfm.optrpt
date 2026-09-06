@@ -1,0 +1,7 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) Fortran Intel(R) 64 Compiler Classic for applications running on Intel(R) 64, Version 2021.5.0 Build 20211109_000000
+
+Compiler options: -I/home/jonishi/FFV.intel/PMlib_old/include -I/home/jonishi/FFV.intel/TextParser_old/include -I/home/jonishi/FFV.intel/Polylib_old/include -I/home/jonishi/FFV.intel/Catlib/include -I/home/jonishi/FFV.intel/BCMTools_old/include -I/home/jonishi/FFV.intel/HDMlib_old/include -I/usr/lib/x86_64-linux-gnu/openmpi/include -I../CGMfuncs -I/opt/intel/oneapi/mpi/2021.5.1//include -I/opt/intel/oneapi/mpi/2021.5.1/include -O3 -ipo -qopenmp -qopt-report=5 -g -qoverride-limits -xHOST -fpp -D_REAL_IS_DOUBLE_ -r8 -DCUTINFO_NORMAL_DOUBLE -o bfm.o -c
