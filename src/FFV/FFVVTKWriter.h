@@ -936,6 +936,102 @@ namespace BCMT_NAMESPACE {
 					ofs << "</VTKFile>" << endl;
 					ofs.close();
 				}
+{
+				ostringstream ossFileName;
+				ossFileName << path;
+				ossFileName << "/";
+				ossFileName << prefix;
+				ossFileName << name.c_str();
+				ossFileName << "-";
+				ossFileName.width(10);
+				ossFileName.setf(ios::fixed);
+				ossFileName.fill('0');
+				ossFileName << step;
+				ossFileName << ".vtm";
+
+				if (myrank == 0)
+				{
+					ofstream ofs;
+					ofs.open(ossFileName.str().c_str(), ios::out);
+					ofs << "<VTKFile type=\"vtkMultiBlockDataSet\" version=\"1.0\" header_type=\"UInt64\">" << endl;
+					ofs << "<vtkMultiBlockDataSet>" << endl;
+					std::vector<Node *> &leafNodeArray = tree->getLeafNodeArray();
+					for (int iRank = 0; iRank < comm.Get_size(); iRank++)
+					{
+						for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++)
+						{
+							Node *node = leafNodeArray[id];
+							Vec3r origin = tree->getOrigin(node) * rootLength;
+							Vec3r blockSize = node->getBlockSize() * rootLength;
+							Vec3r cellSize;
+							cellSize.x = blockSize.x / size.x;
+							cellSize.y = blockSize.y / size.y;
+							cellSize.z = blockSize.z / size.z;
+							int level = node->getLevel();
+
+							ostringstream ossFileName2;
+							ossFileName2 << "./";
+							ossFileName2.width(10);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << step;
+							ossFileName2 << "/";
+							ossFileName2 << prefix;
+							ossFileName2 << name.c_str();
+							/*
+									ossFileName2 << "-";
+									ossFileName2.width(5);
+									ossFileName2.setf(ios::fixed);
+									ossFileName2.fill('0');
+									ossFileName2 << iRank;
+		*/
+							ossFileName2 << "-";
+							ossFileName2.width(5);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << id;
+							ossFileName2 << "-";
+							ossFileName2.width(10);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << step;
+							ossFileName2 << ".vti";
+
+							int lx = size.x * (1 << level);
+							int ly = size.y * (1 << level);
+							int lz = size.z * (1 << level);
+
+							Vec3r origin2 = tree->getOrigin(node);
+
+							double nx0 = (origin2.x) * lx;
+							double ny0 = (origin2.y) * ly;
+							double nz0 = (origin2.z) * lz;
+
+							double nx1 = nx0 + size.x - 1;
+							double ny1 = ny0 + size.y - 1;
+							double nz1 = nz0 + size.z - 1;
+
+							ofs << "\t<Block index=\"";
+							ofs << id;
+							ofs << "\">";
+							ofs << endl;
+
+							ofs << "\t\t<DataSet index=\"0\" ";
+							ofs << "file=\"";
+							ofs << ossFileName2.str().c_str();
+							ofs << "\"/>";
+							ofs << endl;
+
+							ofs << "\t</Block>";
+							ofs << endl;
+							ofs << endl;
+						}
+					}
+					ofs << "</vtkMultiBlockDataSet>" << endl;
+					ofs << "</VTKFile>" << endl;
+					ofs.close();
+				}
+}
 			}
 
 		template <typename T>
@@ -1720,6 +1816,102 @@ namespace BCMT_NAMESPACE {
 					ofs << "</VTKFile>" << endl;
 					ofs.close();
 				}
+{
+				ostringstream ossFileName;
+				ossFileName << path;
+				ossFileName << "/";
+				ossFileName << prefix;
+				ossFileName << name.c_str();
+				ossFileName << "-";
+				ossFileName.width(10);
+				ossFileName.setf(ios::fixed);
+				ossFileName.fill('0');
+				ossFileName << step;
+				ossFileName << ".vtm";
+
+				if (myrank == 0)
+				{
+					ofstream ofs;
+					ofs.open(ossFileName.str().c_str(), ios::out);
+					ofs << "<VTKFile type=\"vtkMultiBlockDataSet\" version=\"1.0\" header_type=\"UInt64\">" << endl;
+					ofs << "<vtkMultiBlockDataSet>" << endl;
+					std::vector<Node *> &leafNodeArray = tree->getLeafNodeArray();
+					for (int iRank = 0; iRank < comm.Get_size(); iRank++)
+					{
+						for (int id = partition->getStart(iRank); id < partition->getEnd(iRank); id++)
+						{
+							Node *node = leafNodeArray[id];
+							Vec3r origin = tree->getOrigin(node) * rootLength;
+							Vec3r blockSize = node->getBlockSize() * rootLength;
+							Vec3r cellSize;
+							cellSize.x = blockSize.x / size.x;
+							cellSize.y = blockSize.y / size.y;
+							cellSize.z = blockSize.z / size.z;
+							int level = node->getLevel();
+
+							ostringstream ossFileName2;
+							ossFileName2 << "./";
+							ossFileName2.width(10);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << step;
+							ossFileName2 << "/";
+							ossFileName2 << prefix;
+							ossFileName2 << name.c_str();
+							/*
+									ossFileName2 << "-";
+									ossFileName2.width(5);
+									ossFileName2.setf(ios::fixed);
+									ossFileName2.fill('0');
+									ossFileName2 << iRank;
+		*/
+							ossFileName2 << "-";
+							ossFileName2.width(5);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << id;
+							ossFileName2 << "-";
+							ossFileName2.width(10);
+							ossFileName2.setf(ios::fixed);
+							ossFileName2.fill('0');
+							ossFileName2 << step;
+							ossFileName2 << ".vti";
+
+							int lx = size.x * (1 << level);
+							int ly = size.y * (1 << level);
+							int lz = size.z * (1 << level);
+
+							Vec3r origin2 = tree->getOrigin(node);
+
+							double nx0 = (origin2.x) * lx;
+							double ny0 = (origin2.y) * ly;
+							double nz0 = (origin2.z) * lz;
+
+							double nx1 = nx0 + size.x - 1;
+							double ny1 = ny0 + size.y - 1;
+							double nz1 = nz0 + size.z - 1;
+
+							ofs << "\t<Block index=\"";
+							ofs << id;
+							ofs << "\">";
+							ofs << endl;
+
+							ofs << "\t\t<DataSet index=\"0\" ";
+							ofs << "file=\"";
+							ofs << ossFileName2.str().c_str();
+							ofs << "\"/>";
+							ofs << endl;
+
+							ofs << "\t</Block>";
+							ofs << endl;
+							ofs << endl;
+						}
+					}
+					ofs << "</vtkMultiBlockDataSet>" << endl;
+					ofs << "</VTKFile>" << endl;
+					ofs.close();
+				}
+}
 			}
 	};
 
