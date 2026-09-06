@@ -1,4 +1,4 @@
-// Moving STL demo: initialization, motion/distribution, block search and output.
+// Moving STL demo: initialization, motion/distribution and output.
 #include "Solver.h"
 #include "BlockBoundingBox.h"
 #include "Polylib.h"
@@ -53,10 +53,6 @@ void Solver::UpdateSTL(int step) {
 	const double start = MPI_Wtime();
 
 	MoveSTL(step);
-
-	const double searchStart = MPI_Wtime();
-	SearchSTL();
-	times[9] += MPI_Wtime() - searchStart;
 
 	OutputSTL(step);
 
@@ -117,83 +113,19 @@ void Solver::MoveSTL(int step) {
 	times[9] = MPI_Wtime() - moved;
 }
 
-void Solver::SearchSTL() {
-	using namespace PolylibNS;
-	// SAT: triangle/AABB intersection, including touching faces/edges.
-	// Polylib's AABB search alone can return triangles that miss the block.
-	const auto intersects = [](PolylibNS::Vertex** vertices, const Vec3r& lo, const Vec3r& length) {
-		double v[3][3], edge[3][3], half[3];
-		const double origin[3] = {lo.x, lo.y, lo.z};
-		const double extent[3] = {length.x, length.y, length.z};
-		for (int a = 0; a < 3; ++a) {
-			half[a] = extent[a]*0.5;
-			for (int k = 0; k < 3; ++k) v[k][a] = (*vertices[k])[a] - (origin[a] + half[a]);
-			for (int k = 0; k < 3; ++k) edge[k][a] = v[(k+1)%3][a] - v[k][a];
-		}
-		const auto separated = [&](double x, double y, double z) {
-			const double r = half[0]*std::fabs(x) + half[1]*std::fabs(y) + half[2]*std::fabs(z);
-			double low = v[0][0]*x + v[0][1]*y + v[0][2]*z, high = low;
-			for (int k = 1; k < 3; ++k) {
-				const double p = v[k][0]*x + v[k][1]*y + v[k][2]*z;
-				low = std::min(low, p); high = std::max(high, p);
-			}
-			const double tolerance = 1.e-12*(r + std::fabs(low) + std::fabs(high));
-			return low > r + tolerance || high < -r - tolerance;
-		};
-		if (separated(1,0,0) || separated(0,1,0) || separated(0,0,1)) return false;
-		for (int k = 0; k < 3; ++k)
-			if (separated(0,edge[k][2],-edge[k][1]) ||
-				separated(-edge[k][2],0,edge[k][0]) ||
-				separated(edge[k][1],-edge[k][0],0)) return false;
-		return !separated(edge[0][1]*edge[1][2]-edge[0][2]*edge[1][1],
-			edge[0][2]*edge[1][0]-edge[0][0]*edge[1][2],
-			edge[0][0]*edge[1][1]-edge[0][1]*edge[1][0]);
-	};
-
-	// Distribution leaves only local current geometry on every rank.
-	std::vector<PolygonGroup*>* groups = pl_movingstl->get_leaf_groups();
-	stlTriangles.assign(blockManager.getNumBlock(), std::vector<STLTriangle>());
-	for (int b = 0; b < blockManager.getNumBlock(); ++b) {
-		BlockBase* block = blockManager.getBlock(b);
-		Vec3r lo = block->getOrigin();
-		Vec3r length = block->getBlockSize();
-		Vec3<PL_REAL> lower, upper;
-		for (int a = 0; a < 3; ++a) {
-			lower[a] = std::nextafter(static_cast<PL_REAL>(lo[a]), -std::numeric_limits<PL_REAL>::infinity());
-			upper[a] = std::nextafter(static_cast<PL_REAL>(lo[a]+length[a]), std::numeric_limits<PL_REAL>::infinity());
-		}
-		BBox box(lower, upper);
-		for (size_t g = 0; g < groups->size(); ++g) {
-			if (!(*groups)[g]->get_triangles() || (*groups)[g]->get_triangles()->empty()) continue;
-			std::vector<PrivateTriangle*> candidates;
-			if ((*groups)[g]->search(&box, false, &candidates) != PLSTAT_OK)
-				MPI::COMM_WORLD.Abort(EX_FAILURE);
-			for (size_t j = 0; j < candidates.size(); ++j) {
-				PolylibNS::Vertex** v = candidates[j]->get_vertex();
-				if (!intersects(v, lo, length)) continue;
-				STLTriangle triangle;
-				triangle.group = g;
-				triangle.id = candidates[j]->get_id();
-				for (int k = 0; k < 3; ++k)
-					for (int a = 0; a < 3; ++a) triangle.xyz[3*k+a] = (*v[k])[a];
-				stlTriangles[b].push_back(triangle);
-			}
-		}
-	}
-	delete groups;
-}
-
 void Solver::OutputSTL(int step) {
 	const double stlOutputStart = MPI_Wtime();
 	const double time = step * g_pFFVConfig->TimeControlTimeStepDeltaT;
-	// Preserve every block membership, including duplicate triangles.
-	std::vector<const STLTriangle*> triangles;
-	std::vector<int> blockIds;
-	for (size_t b = 0; b < stlTriangles.size(); ++b)
-		for (size_t j = 0; j < stlTriangles[b].size(); ++j) {
-			triangles.push_back(&stlTriangles[b][j]);
-			blockIds.push_back(partition->getStart(myrank) + b);
-		}
+	std::vector<PrivateTriangle*> triangles;
+	std::vector<int> groupIds;
+	std::vector<PolygonGroup*>* groups = pl_movingstl->get_leaf_groups();
+	for (size_t g = 0; g < groups->size(); ++g) {
+		const std::vector<PrivateTriangle*>* groupTriangles = (*groups)[g]->get_triangles();
+		if (!groupTriangles) continue;
+		triangles.insert(triangles.end(), groupTriangles->begin(), groupTriangles->end());
+		groupIds.insert(groupIds.end(), groupTriangles->size(), g);
+	}
+	delete groups;
 	// Explicit little-endian encoding avoids native struct padding/byte order.
 	const uint16_t endianProbe = 1;
 	const bool littleEndian = *reinterpret_cast<const unsigned char*>(&endianProbe) == 1;
@@ -215,7 +147,10 @@ void Solver::OutputSTL(int step) {
 	const uint32_t triangleCount = static_cast<uint32_t>(triangles.size());
 	appendScalar(&triangleCount, sizeof(triangleCount));
 	for (size_t i = 0; i < triangles.size(); ++i) {
-		const double* p = triangles[i]->xyz;
+		double p[9];
+		PolylibNS::Vertex** vertices = triangles[i]->get_vertex();
+		for (int k = 0; k < 3; ++k)
+			for (int a = 0; a < 3; ++a) p[3*k+a] = (*vertices[k])[a];
 		const double ax = p[3]-p[0], ay = p[4]-p[1], az = p[5]-p[2];
 		const double bx = p[6]-p[0], by = p[7]-p[1], bz = p[8]-p[2];
 		double nx = ay*bz-az*by, ny = az*bx-ax*bz, nz = ax*by-ay*bx;
@@ -242,29 +177,34 @@ void Solver::OutputSTL(int step) {
 	// VTK appended raw data: each array is preceded by a UInt64 byte count.
 	// VTP retains Float64 coordinates; STL's standard representation is Float32.
 	bytes.clear();
-	bytes.reserve(7*sizeof(uint64_t) + triangles.size()*120);
-	uint64_t offsets[7];
+	bytes.reserve(6*sizeof(uint64_t) + triangles.size()*116);
+	uint64_t offsets[6];
 	const auto beginArray = [&](int array, uint64_t size) {
 		offsets[array] = bytes.size();
 		appendScalar(&size, sizeof(size));
 	};
-	for (int field = 0; field < 4; ++field) {
+	for (int field = 0; field < 3; ++field) {
 		beginArray(field, triangles.size()*sizeof(int32_t));
 		for (size_t i = 0; i < triangles.size(); ++i) {
-			const int32_t value = field == 0 ? myrank : field == 1 ? blockIds[i] :
-				field == 2 ? triangles[i]->group : triangles[i]->id;
+			const int32_t value = field == 0 ? myrank : field == 1 ? groupIds[i] : triangles[i]->get_id();
 			appendScalar(&value, sizeof(value));
 		}
 	}
-	beginArray(4, triangles.size()*9*sizeof(double));
-	for (size_t i = 0; i < triangles.size(); ++i)
-		for (int k = 0; k < 9; ++k) appendScalar(&triangles[i]->xyz[k], sizeof(double));
-	beginArray(5, triangles.size()*3*sizeof(int64_t));
+	beginArray(3, triangles.size()*9*sizeof(double));
+	for (size_t i = 0; i < triangles.size(); ++i) {
+		PolylibNS::Vertex** vertices = triangles[i]->get_vertex();
+		for (int k = 0; k < 3; ++k)
+			for (int a = 0; a < 3; ++a) {
+				const double coordinate = (*vertices[k])[a];
+				appendScalar(&coordinate, sizeof(coordinate));
+			}
+	}
+	beginArray(4, triangles.size()*3*sizeof(int64_t));
 	for (size_t i = 0; i < triangles.size()*3; ++i) {
 		const int64_t point = i;
 		appendScalar(&point, sizeof(point));
 	}
-	beginArray(6, triangles.size()*sizeof(int64_t));
+	beginArray(5, triangles.size()*sizeof(int64_t));
 	for (size_t i = 0; i < triangles.size(); ++i) {
 		const int64_t end = 3*(i+1);
 		appendScalar(&end, sizeof(end));
@@ -282,17 +222,17 @@ void Solver::OutputSTL(int step) {
 		<< "<Piece NumberOfPoints=\"" << triangles.size()*3
 		<< "\" NumberOfVerts=\"0\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\""
 		<< triangles.size() << "\">\n<CellData>\n";
-	const char* names[] = {"Rank", "BlockID", "GroupID", "TriangleID"};
-	for (int field = 0; field < 4; ++field)
+	const char* names[] = {"Rank", "GroupID", "TriangleID"};
+	for (int field = 0; field < 3; ++field)
 		vtp << "<DataArray type=\"Int32\" Name=\"" << names[field]
 			<< "\" format=\"appended\" offset=\"" << offsets[field] << "\"/>\n";
 	vtp << "</CellData>\n<Points>\n"
 		<< "<DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"appended\" offset=\""
-		<< offsets[4] << "\"/>\n</Points>\n<Polys>\n"
+		<< offsets[3] << "\"/>\n</Points>\n<Polys>\n"
 		<< "<DataArray type=\"Int64\" Name=\"connectivity\" format=\"appended\" offset=\""
-		<< offsets[5] << "\"/>\n"
+		<< offsets[4] << "\"/>\n"
 		<< "<DataArray type=\"Int64\" Name=\"offsets\" format=\"appended\" offset=\""
-		<< offsets[6] << "\"/>\n</Polys>\n</Piece>\n</PolyData>\n"
+		<< offsets[5] << "\"/>\n</Polys>\n</Piece>\n</PolyData>\n"
 		<< "<AppendedData encoding=\"raw\">\n_";
 	vtp.write(bytes.data(), bytes.size());
 	vtp << "\n</AppendedData>\n</VTKFile>\n";

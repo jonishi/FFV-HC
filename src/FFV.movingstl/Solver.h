@@ -34,12 +34,6 @@ class Solver {
 		PolylibNS::BCMPolylib* pl;           // Static geometry, distributed on all ranks.
 		PolylibNS::BCMPolylib* pl_movingstl_initial; // Immutable full initial geometry on rank 0.
 		PolylibNS::BCMPolylib* pl_movingstl; // Current geometry; local subset after distribution.
-		struct STLTriangle {
-			int group, id;
-			double xyz[9];
-		};
-		// Local block index -> triangles intersecting the physical block (no halo).
-		std::vector<std::vector<STLTriangle> > stlTriangles;
 		std::vector<std::string>* pgList;
 
 		Divider* divider;
@@ -278,7 +272,6 @@ class Solver {
 		int Update(int step);
 		void UpdateSTL(int step);
 		void MoveSTL(int step);
-		void SearchSTL();
 		void OutputSTL(int step);
 		void UpdateUX(int step);
 		void UpdateUY(int step);
